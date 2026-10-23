@@ -2,69 +2,88 @@
 
 # ⏱ TTT — Token to Time
 
-**What do your Claude tokens cost you in real time?**<br>
-Live in your Claude Code status bar: the task Claude is on right now, a forecast of when it'll finish, and the whole project's real time, tokens and exchange rate.
+**What do your Claude tokens cost you in real time, and how long will the next task take?**<br>
+TTT puts it in your Claude Code status bar and keeps it to one line: the running task and its forecast, then the project's real time, your usage-limit runway and your roadmap.
 
 [![tests](https://github.com/mysticalsin/TTT/actions/workflows/test.yml/badge.svg)](https://github.com/mysticalsin/TTT/actions/workflows/test.yml)
 ![node](https://img.shields.io/badge/node-%E2%89%A520-5fa04e)
 ![deps](https://img.shields.io/badge/dependencies-0-7c5cff)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
-<img src="docs/hero.gif" alt="Claude Code status bar with the TTT line: a running task's elapsed time, forecast bar and ETA, tokens and subagents, then the project's real time, tokens and task count" width="100%">
+<img src="docs/hero.gif" alt="Claude Code status bar with the TTT line: a running task's elapsed time, a plan-based ETA as subagents finish, tokens and parallelism, then the project's real time, tokens, tasks and how many tasks fit before the 5-hour limit" width="100%">
 
 </div>
 
-TTT adds **one line** to a [ccstatusline](https://github.com/sirmalloc/ccstatusline) bar like [tonys-tcc](https://github.com/mysticalsin/tonys-tcc), just above the rainbow rule. It also works on its own. It has no dependencies (only Node) and nothing to configure.
+TTT adds **one line** to a [ccstatusline](https://github.com/sirmalloc/ccstatusline) bar like [tonys-tcc](https://github.com/mysticalsin/tonys-tcc), just above the rainbow rule. It also works on its own. It has zero dependencies (only Node) and nothing to configure. It reads the transcripts Claude Code already writes: no hooks, no proxy, nothing sent anywhere.
 
-<p align="center"><img src="docs/states.svg" alt="The TTT line while a task runs on pace, after it passes the median, once finished, and the project segment" width="100%"></p>
+## What the line can say
 
----
-
-## Reading the bar
-
-**Task segment.** "Task" means the prompt you just sent and everything it caused, including subagents.
+<p align="center"><img src="docs/states.svg" alt="Seven states of the TTT line: just sent with a pre-flight estimate, running with a similar-task forecast, running with subagent progress, a loop alert, a usage-cap warning, finished with time spent waiting on you, and the project segment" width="100%"></p>
 
 | | |
 |---|---|
-| `⏳ 11m33s` | Active time on the current task. Green below your median task length, amber above it, red past your p90. |
-| `▰▰▰▱▱▱ ~11m left` | **Forecast.** Of your past tasks that already ran this long, how much longer did they take? The bar shows progress against that median. |
-| `past p90` | This task has outlived 90% of your history. Expect a long one. |
-| `learning 3/5` | The project has fewer than 5 finished tasks. TTT borrows durations from your other projects until it has enough. |
-| `64.1k out` | Tokens Claude generated for this task (main thread plus subagents, thinking included). |
-| `🤖×3 ⚡2.1×` | 3 subagents. On average, 2.1 agents were working at once. |
-| `✅ last 5m02s` | When idle, the bar shows the last finished task. `⏹` means you interrupted it; `💤` means it stalled (no activity for 30 min). |
+| `⏳ 4s 🔮 ~20m · ~19.9k` | **Pre-flight.** The moment you hit enter, TTT estimates time and tokens from the most similar things you've asked before, across all your projects. |
+| `▰▰▱▱▱ 🔮~8m left` | **Live ETA from similar tasks.** Your past tasks with similar prompts that had already run this long: how much longer did they take? The clock turns amber past your median and red past your p90. |
+| `📋1/3 ~12m left` · `🤖1/3 ⚡3.6×` | **Plan burn-down.** When Claude splits the work into subagents (or a todo list), TTT extrapolates from how fast they finish. `⚡3.6×` means 3.6 agents working at once on average. |
+| `🌀 same error ×13` | **Loop alert.** The same failing result over and over, the same call repeated, or no file edits in 12 minutes while tokens keep flowing. It also sends a notification so you can step in. |
+| `⚠ cap 16:40` | **Usage-limit warning.** At your current burn rate, this task's forecast outlasts what's left of your 5-hour limit. |
+| `⏸ you 11m42s` | **Time Claude spent waiting on you**: permission prompts and questions. |
+| `🔋≈4 tasks` | **Runway.** How many of your typical tasks fit before the 5-hour cap, measured from how fast the limit drains *while Claude works*. |
+| `🏁 1h40m` | **Roadmap.** All the open items in `TODO.md` / `ROADMAP.md`, each estimated from similar past tasks. |
+| `🏗 acme-web 22h01m · 4.01M · 78 tasks` | **Project totals**: real wall-clock time (parallel sessions merged), tokens, and tasks. |
 
-**Project segment.** Everything ever run in this folder.
+The line fits itself to the width it's given. When space is tight it drops the least important parts first (tok/min, the exchange rate, agent time…). The clock, alerts and ETA always stay.
 
-| | |
-|---|---|
-| `🏗 acme-web 7h14m` | **Real time**: wall-clock time with Claude working. Parallel sessions are merged, so they aren't double-counted. |
-| `1.54M · 46 tasks` | Output tokens and number of tasks. |
-| `14h05m agent` | Agent time: main thread plus all subagents. Shown when it's well above real time. |
-| `today 36m` | Real time today. |
-| `100k≈28m49s` | **Your exchange rate**: what a fixed chunk of tokens costs in real time in this project. It's measured, not assumed. |
-
-The bar fits itself to the width ccstatusline gives it. When space is tight, it drops the least important parts first, starting with tok/min, then agent time and the exchange rate. Elapsed time and the ETA always stay.
+**Walk-away mode.** When a task you left running for 3+ minutes finishes, or starts looping, you get a macOS notification. Set `TTT_VOICE=1` and [Sam](https://github.com/mysticalsin/tonys-tcc) says it out loud: *"Done. 21 minutes, 118 thousand tokens, 3 minutes faster than usual."*
 
 ---
 
 ## Commands
 
-<p align="center"><img src="docs/report.svg" alt="ttt report: real time, agent time, tokens, tasks, exchange rate, today, last 7 days, 14-day sparkline, models, recent and longest tasks" width="100%"></p>
-
 ```bash
-ttt report              # this project: real/agent time, tokens, exchange rate, 14-day sparkline,
-                        # models, recent + longest tasks
-ttt report ~/code/api-gateway --tasks 30
-ttt all                 # every project ranked by real time, with a Σ row
-ttt convert 250k        # 250k out tok ≈ 1h12m of Claude work at this project's pace
-ttt convert 1h30m       # 1h30m ≈ 312k out tok
-ttt report --json       # everything, machine-readable
-ttt bar [task|project]  # what the status line runs (reads Claude Code's JSON on stdin)
+ttt report               # the full picture for this project (below)
+ttt eta "add Apple Pay"  # forecast a task before you send it
+ttt why [n]              # where the time went in the last (or nth-last) finished task
+ttt blocked [--apply]    # time Claude waited on you, and the allow-rules that stop it
+ttt plan [file|--issues] # forecast your roadmap: TODO.md / ROADMAP.md, or GitHub issues
+ttt dashboard [--all]    # local visual dashboard in your browser
+ttt all                  # every project ranked by real time
+ttt convert 250k | 45m   # tokens ⇄ time at your measured pace
 ```
 
-<p align="center"><img src="docs/all.svg" alt="ttt all: every project ranked by real time, with agent time, tokens, tasks, rate and today" width="100%"></p>
-<p align="center"><img src="docs/convert.svg" alt="ttt convert: 250k tokens to time and 1h30m to tokens at the project's measured pace" width="70%"></p>
+Every command takes `--json`, plus `--dir <project>` to point at another project.
+
+<p align="center"><img src="docs/report.svg" alt="ttt report: real and agent time, tokens, tasks, exchange rate, API cost, forecast accuracy from a backtest, where the time goes, waiting on you, models on your work with cheaper-model tips, recent and longest tasks" width="100%"></p>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/eta.svg" alt="ttt eta: an estimate with a likely range and token cost, and the most similar past tasks"></td>
+<td width="50%"><img src="docs/why.svg" alt="ttt why: active, wall and agent time, tokens and cost, the start-of-task forecast versus what happened, plan progress, and a time breakdown"></td>
+</tr>
+</table>
+
+<p align="center"><img src="docs/plan.svg" alt="ttt plan: each open roadmap item estimated from similar tasks, with a total and a finish date at your daily pace" width="100%"></p>
+<p align="center"><img src="docs/blocked.svg" alt="ttt blocked: commands that made Claude wait for approval, how long, and the permission rule for each" width="100%"></p>
+
+### Dashboard
+
+`ttt dashboard` writes one self-contained HTML file to `~/.cache/ttt/` and opens it. It shows:
+- Every task as a timeline
+- When you work, as a weekday × hour heatmap
+- Real time per day
+- The exchange-rate trend
+- Where the time goes
+- Model economics
+- Waiting on you
+
+It makes no network requests. Your prompts stay on your machine.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/dashboard-dark.png" alt="TTT dashboard, dark theme"></td>
+<td width="50%"><img src="docs/dashboard-light.png" alt="TTT dashboard, light theme"></td>
+</tr>
+</table>
 
 ---
 
@@ -72,19 +91,23 @@ ttt bar [task|project]  # what the status line runs (reads Claude Code's JSON on
 
 <p align="center"><img src="docs/how-it-works.svg" alt="Transcripts flow into an incremental index, then a tokens-to-time model, then the status bar and CLI" width="100%"></p>
 
-Claude Code writes every turn to `~/.claude/projects/<project>/<session>.jsonl`. Each subagent gets its own file under `<session>/subagents/`. TTT reads only those files. It doesn't use hooks, a proxy or guesses.
+Claude Code writes every turn to `~/.claude/projects/<project>/<session>.jsonl`, and each subagent to `<session>/subagents/`. TTT reads those files and nothing else.
 
-- **Tasks.** A task starts at each prompt *you* send, or a slash command you run. Messages Claude receives on its own (background-task notifications, coordinator messages, system reminders) stay part of the task that caused them. Subagent entries carry the `promptId` of the prompt that spawned them, so attribution is exact.
-- **Tokens.** One API response appears as several transcript entries (thinking, text, tool use), and each repeats the usage block. TTT counts each message once.
-- **Active time.** Gaps over 5 minutes (`TTT_IDLE_MIN`) count as you being away or a permission prompt left open. They are cut out.
-- **Real vs. agent time.** Real time is the union of active periods across all tasks and sessions. Agent time is each stream's (main thread or subagent) active time added up. Their ratio is your parallelism.
-- **Forecast.** This is a survival estimate: the median remaining time among past tasks that were still running at this point. TTT also computes an 80th-percentile bound. It gets sharper as you use it.
-- **Speed.** TTT keeps a byte offset per file, so each refresh reads only what was written since the last one. A warm refresh is about 80 ms, even on a 1.7 GB project. When there's more than 24 MB to catch up on, the bar returns immediately (`indexing history…`) and a detached job catches up. The cache lives in `~/.cache/ttt/`.
+- **Tasks.** A task is one prompt *you* sent (or one slash command), plus everything it caused. Subagents are joined to it by the exact `promptId` that spawned them. Background notifications and system messages stay part of the task that caused them.
+- **Tokens.** Each API message is counted once, even though the transcript repeats its usage on every content block. Costs are API-equivalent, from per-model prices with the 5-minute and 1-hour cache-write rates (override with `TTT_PRICES`).
+- **Time.**
+  - *Active:* gaps over 5 minutes are you, not Claude, so they're cut out.
+  - *Real:* the union of active periods across sessions.
+  - *Agent:* every stream's active time added up.
+- **Where the time goes.** Every gap on the main thread is charged to whatever ended it: model output, a tool (Bash is labelled by its real command, e.g. `npm test`), or waiting on you. "Waiting on you" is exact, because the transcript records whether each tool call was approved by config or by a person.
+- **Forecasts.** The estimate comes from the first source available:
+  1. 📋 Claude's own plan, when it has one.
+  2. 🔮 Similar past prompts, matched with TF-IDF across all projects (same-project, same-model and same-effort tasks weigh more), conditioned on how long the task has already run.
+  3. ⏳ Survival over all your past tasks.
 
-Token modes (`TTT_TOKENS`):
-- `out` (default): what Claude generated.
-- `work`: input, output and cache writes.
-- `all`: also counts cache reads, which mostly measure how big the context is, not how much work was done.
+  **They're backtested.** Each past task is predicted from only what came before it, and the result is shown in `ttt report`. On 182 real tasks, similar-prompt matching typically missed by ×2.6, against ×4.6 for "guess the median". The backtest also sets the "likely" ranges `ttt eta` shows. If the forecasts in a project are no better than the median, the report says so.
+- **Runway.** Every refresh samples your 5-hour limit. The burn rate is measured only while a task is running, then converted into tasks and a cap time.
+- **Speed.** A byte-offset cache means each refresh reads only new bytes: about 80 ms warm, even on a 1.7 GB project. Big catch-ups run in a detached background job while the bar says `indexing history…`.
 
 ---
 
@@ -93,17 +116,17 @@ Token modes (`TTT_TOKENS`):
 ```bash
 git clone https://github.com/mysticalsin/TTT.git ~/Documents/Projects/TTT
 cd ~/Documents/Projects/TTT && ./install.sh
-alias ttt=~/.claude/bin/ttt   # add to ~/.zshrc to call it directly
+alias ttt=~/.claude/bin/ttt   # add to ~/.zshrc
 ```
 
 The installer does three things:
-- Links `~/.claude/bin/ttt` to `bin/ttt.mjs`.
-- Adds one line to your ccstatusline config. It edits the text directly, so your hand formatting survives (the diff is exactly 4 lines). It writes through the tonys-tcc symlink and saves a backup to `~/.cache/ttt/backups/`.
-- Warms the cache for all your projects in the background.
+- Links `~/.claude/bin/ttt` to the repo.
+- Adds one line to your ccstatusline config. It edits the text in place, so your formatting survives (the diff is exactly 4 lines). It writes through a tonys-tcc symlink and backs up to `~/.cache/ttt/backups/`.
+- Warms the cache in the background.
 
-`./install.sh --uninstall` reverses it. The add→remove round trip returns a byte-identical file.
+`./install.sh --uninstall` reverses it byte-for-byte.
 
-No ccstatusline? Point Claude Code straight at TTT:
+No ccstatusline? Use TTT directly:
 
 ```json
 { "statusLine": { "type": "command", "command": "~/.claude/bin/ttt bar", "padding": 0, "refreshInterval": 5 } }
@@ -113,10 +136,14 @@ No ccstatusline? Point Claude Code straight at TTT:
 
 | var | default | |
 |---|---|---|
-| `TTT_TOKENS` | `out` | `out` \| `work` \| `all` |
+| `TTT_TOKENS` | `out` | `out` (generated) \| `work` (+ input and cache writes) \| `all` (+ cache reads) |
 | `TTT_IDLE_MIN` | `5` | Gaps longer than this aren't counted as work. Changing it triggers a re-index. |
 | `TTT_STALL_MIN` | `30` | A task with no activity for this long counts as stalled. |
 | `TTT_WIDTH` | `92` | Column budget for the TTT line. |
+| `TTT_NOTIFY` / `TTT_NOTIFY_MIN` | `1` / `3` | Notifications on/off, and the minimum task length that triggers one. |
+| `TTT_VOICE` | `0` | `1` speaks notifications (Sam if installed, else `say`). |
+| `TTT_PLAN_FILE` | | A roadmap that lives outside the repo. |
+| `TTT_PRICES` | | JSON price overrides, e.g. `{"opus-5.5":[4,20,0.2]}` (in, out, cache read per MTok). |
 | `TTT_INLINE_MB` | `24` | Above this much unread transcript, the bar indexes in the background. |
 | `NO_COLOR` | | Plain output. |
 
@@ -124,14 +151,19 @@ No ccstatusline? Point Claude Code straight at TTT:
 
 | path | what |
 |---|---|
-| `bin/ttt.mjs` | CLI entry point |
-| `lib/indexer.mjs` | Incremental JSONL reader that folds entries into tasks and keeps the cache |
-| `lib/model.mjs` | Active/real/agent time, rates, survival forecast |
-| `lib/bar.mjs` | Status-line segments with width fitting |
-| `lib/report.mjs` | `report` / `all` terminal reports |
-| `lib/global.mjs` | Cross-project duration memory (for forecasts in new projects) |
-| `scripts/statusline.mjs` | Format-preserving ccstatusline patcher |
+| `bin/ttt.mjs` | CLI |
+| `lib/indexer.mjs` | Incremental JSONL reader: tasks, tokens, time breakdown, waits, plans, loop signals |
+| `lib/model.mjs` | Active, real and agent time, rates, plan progress, loop detection |
+| `lib/forecast.mjs` | Plan, similar-prompt and survival estimators, plus the backtest |
+| `lib/similar.mjs` | TF-IDF prompt similarity and task kinds |
+| `lib/limits.mjs` | 5-hour limit sampling, burn rate, runway |
+| `lib/plan.mjs` | Roadmap parsing and project forecast |
+| `lib/blocked.mjs` | Waiting-on-you causes and permission rules |
+| `lib/pricing.mjs` | API-equivalent cost |
+| `lib/notify.mjs` | Notifications and voice |
+| `lib/dashboard.mjs` | The local HTML dashboard |
+| `lib/bar.mjs` · `lib/report.mjs` | Status line and terminal reports |
 | `scripts/visuals.mjs` | Rebuilds every image in `docs/` from synthetic demo projects (`npm run visuals`) |
-| `test/` | `npm test` (node:test, fixture transcripts) |
+| `test/` | `npm test` (node:test) |
 
-> All screenshots are generated from synthetic demo projects (`npm run visuals`). None of them come from real transcripts.
+> All screenshots come from synthetic demo projects (`npm run visuals`). None of them come from real transcripts.

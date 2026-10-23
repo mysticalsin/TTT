@@ -1,7 +1,7 @@
 {
   "name": "ttt",
-  "version": "1.0.0",
-  "description": "Token to Time — the real time your Claude Code tokens buy, per task and per project, live in your status bar.",
+  "version": "2.0.0",
+  "description": "Token to Time — real time, forecasts, limits runway and loop alerts for Claude Code, live in your status bar.",
   "type": "module",
   "bin": { "ttt": "bin/ttt.mjs" },
   "scripts": {

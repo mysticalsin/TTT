@@ -6,8 +6,8 @@
 <text x="362.5" y="24.5" fill="#7d828c" font-family="-apple-system,Segoe UI,Helvetica,sans-serif" font-size="12.5" text-anchor="middle">ttt convert</text>
 <g font-family="SF Mono,Menlo,Monaco,Consolas,monospace" font-size="14" xml:space="preserve" style="white-space:pre">
 <text x="22.0" y="60" fill="rgb(138,138,138)">$</text><text x="38.8" y="60" fill="#d6d6d6">ttt convert 250k</text>
-<text x="38.8" y="81" fill="rgb(95,215,215)">250k</text><text x="80.8" y="81" fill="rgb(138,138,138)">out tok</text><text x="148.0" y="81" fill="#d6d6d6">≈</text><text x="164.8" y="81" fill="#eaeaea" font-weight="700">1h12m</text><text x="215.2" y="81" fill="rgb(138,138,138)">of Claude work at acme-web's pace (3.5k/min over 45 tasks)</text>
+<text x="38.8" y="81" fill="rgb(95,215,215)">250k</text><text x="80.8" y="81" fill="rgb(138,138,138)">out tok</text><text x="148.0" y="81" fill="#d6d6d6">≈</text><text x="164.8" y="81" fill="#eaeaea" font-weight="700">1h23m</text><text x="215.2" y="81" fill="rgb(138,138,138)">of Claude work at acme-web's pace (3.0k/min over 72 tasks)</text>
 <text x="22.0" y="102" fill="rgb(138,138,138)">$</text><text x="38.8" y="102" fill="#d6d6d6">ttt convert 1h30m</text>
-<text x="38.8" y="123" fill="#eaeaea">1h30m</text><text x="89.2" y="123" fill="#d6d6d6">≈</text><text x="106.0" y="123" fill="rgb(95,215,215)" font-weight="700">312k</text><text x="148.0" y="123" fill="rgb(138,138,138)">out tok at acme-web's pace (3.5k/min over 45 tasks)</text>
+<text x="38.8" y="123" fill="#eaeaea">1h30m</text><text x="89.2" y="123" fill="#d6d6d6">≈</text><text x="106.0" y="123" fill="rgb(95,215,215)" font-weight="700">269k</text><text x="148.0" y="123" fill="rgb(138,138,138)">out tok at acme-web's pace (3.0k/min over 72 tasks)</text>
 </g>
 </svg>
