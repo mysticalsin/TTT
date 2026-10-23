@@ -14,6 +14,8 @@ TTT puts it in your Claude Code status bar and keeps it to one line: the running
 
 </div>
 
+**New in 2.1: [`/trace`](#trace--a-waterfall-of-any-task)**, a waterfall of any task (every model call, tool, wait and subagent) right inside Claude Code.
+
 TTT adds **one line** to a [ccstatusline](https://github.com/sirmalloc/ccstatusline) bar like [tonys-tcc](https://github.com/mysticalsin/tonys-tcc), just above the rainbow rule. It also works on its own. It has zero dependencies (only Node) and nothing to configure. It reads the transcripts Claude Code already writes: no hooks, no proxy, nothing sent anywhere.
 
 ## What the line can say
