@@ -36,6 +36,7 @@ const FAMILIES = [
   { m: 45, prompts: ['Refactor the cart store to Zustand', 'Migrate the users table to Postgres 17', 'Upgrade to React 19 and fix the breakages'] },
   { m: 20, prompts: ['/code-review high', 'Review the payments PR for security issues'] },
 ];
+const AGENT_JOBS = ['Research the Stripe API and webhooks', 'Write the checkout integration tests', 'Review the payment flow for security', 'Update the docs and changelog'];
 const COMMANDS = ['npm test', 'npm run build', 'git status', 'git diff', 'pnpm lint', 'rg -n TODO src', 'node scripts/check.mjs', 'npx playwright test', 'ls -la'];
 
 class Writer {
@@ -62,6 +63,16 @@ class Writer {
     main.push({ type: 'user', timestamp: iso(start), promptId: pid, uuid: `u${this.n}`, origin: { kind: 'human' }, cwd: this.cwd, message: { role: 'user', content: prompt } });
     const end = start + minutes * MIN;
     let t = start + between(3, 8) * 1000;
+    // Handoffs: the orchestrator spawns its subagents with the Agent tool.
+    const handoffIds = [];
+    for (let a = 0; a < agents; a++) {
+      const tid = `tu${++this.n}`;
+      handoffIds.push(tid);
+      main.push({ type: 'assistant', timestamp: iso(t), effort: 'high', message: { id: this.id(), model, stop_reason: 'tool_use', usage: this.usage(300), content: [{ type: 'tool_use', id: tid, name: 'Agent', input: { description: AGENT_JOBS[a % AGENT_JOBS.length], prompt: 'subtask' } }] } });
+      t += between(1, 3) * 1000;
+      main.push({ type: 'user', timestamp: iso(t), promptId: pid, permissionDecision: { decision: 'accept', source: 'config' }, toolUseResult: { isAsync: true, status: 'async_launched' }, message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: tid, content: 'launched' }] } });
+      t += between(1, 3) * 1000;
+    }
     while (t < end) {
       const tid = `tu${++this.n}`;
       const edit = !errorLoop && rnd() < 0.3;
@@ -80,11 +91,15 @@ class Writer {
     for (let a = 0; a < agents; a++) {
       const aid = `a${this.n}x${a}`;
       const list = (byFile[`${sid}/subagents/agent-${aid}.jsonl`] = []);
+      fs.writeFileSync(this.file(`${sid}/subagents/agent-${aid}.meta.json`), JSON.stringify({ toolUseId: handoffIds[a], description: AGENT_JOBS[a % AGENT_JOBS.length], agentType: 'general-purpose' }));
       const s0 = start + between(0.3, 1) * MIN;
       const e0 = start + minutes * MIN * (0.35 + (0.5 * (a + 1)) / agents);
       list.push({ type: 'user', isSidechain: true, promptId: pid, agentId: aid, timestamp: iso(s0), message: { role: 'user', content: 'subtask' } });
       for (let ta = s0 + 4000; ta < e0; ta += between(8, 30) * 1000) {
-        list.push({ type: 'assistant', isSidechain: true, agentId: aid, timestamp: iso(ta), message: { id: this.id(), model: a % 2 ? 'claude-haiku-5-5' : 'claude-sonnet-5-5', stop_reason: 'tool_use', usage: this.usage(Math.round(between(200, 1200))) } });
+        const stid = `st${++this.n}`;
+        list.push({ type: 'assistant', isSidechain: true, agentId: aid, timestamp: iso(ta), message: { id: this.id(), model: a % 2 ? 'claude-haiku-5-5' : 'claude-sonnet-5-5', stop_reason: 'tool_use', usage: this.usage(Math.round(between(200, 1200))), content: [{ type: 'tool_use', id: stid, name: rnd() < 0.5 ? 'Read' : 'Bash', input: { command: pick(COMMANDS), file_path: '/src/app.ts' } }] } });
+        ta += between(2, 12) * 1000;
+        list.push({ type: 'user', isSidechain: true, agentId: aid, timestamp: iso(ta), message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: stid, is_error: rnd() < 0.04, content: 'ok' }] } });
       }
       list.push({ type: 'assistant', isSidechain: true, agentId: aid, timestamp: iso(e0), message: { id: this.id(), model: 'claude-sonnet-5-5', stop_reason: 'end_turn', usage: this.usage(400) } });
     }
@@ -231,6 +246,8 @@ const states = [
 ];
 svg('states.svg', states.join('\n'), 'every state of the TTT line');
 svg('why.svg', `${prompt('ttt why')}\n${run(['why', '--dir', acme.dir])}`, 'ttt why');
+const traceHtml = path.join(WORK, 'trace.html');
+svg('trace.svg', `${prompt('/trace stripe')}\n${run(['trace', 'stripe', '--dir', acme.dir, '--no-open', '--out', traceHtml]).replace(/\n.*interactive waterfall:.*\n/, '\n  ↗ interactive waterfall opened in your browser\n')}`, '/trace in Claude Code');
 
 // ------------------------------------------------------------------ dashboard + GIF (Chrome)
 function shoot(html, png, w, h) {
@@ -252,6 +269,15 @@ if (fs.existsSync(CHROME)) {
     fs.rmSync(png, { force: true });
     shoot(themed, png, 1240, 1480);
     console.log(`  docs/dashboard-${theme}.png`);
+  }
+
+  for (const theme of ['dark', 'light']) {
+    const themed = path.join(WORK, `trace-${theme}.html`);
+    fs.writeFileSync(themed, fs.readFileSync(traceHtml, 'utf8').replace('<html lang="en">', `<html lang="en" data-theme="${theme}">`));
+    const png = path.join(DOCS, `trace-${theme}.png`);
+    fs.rmSync(png, { force: true });
+    shoot(themed, png, 1400, 860);
+    console.log(`  docs/trace-${theme}.png`);
   }
 
   const fdir = path.join(WORK, 'frames');

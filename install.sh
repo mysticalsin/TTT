@@ -12,6 +12,7 @@ chmod +x "$R/bin/ttt.mjs"
 
 if [ "$1" = "--uninstall" ]; then
   [ -L "$BIN/ttt" ] && rm "$BIN/ttt" && echo "rm   $BIN/ttt"
+  [ -L "$HOME/.claude/commands/trace.md" ] && rm "$HOME/.claude/commands/trace.md" && echo "rm   ~/.claude/commands/trace.md"
   [ -e "$CFG" ] && node "$R/scripts/statusline.mjs" remove "$CFG"
   echo "done."; exit 0
 fi
@@ -20,6 +21,16 @@ mkdir -p "$BIN"
 if [ -e "$BIN/ttt" ] && [ ! -L "$BIN/ttt" ]; then mv "$BIN/ttt" "$BIN/ttt.pre-ttt.bak"; echo "bak  $BIN/ttt"; fi
 ln -sf "$R/bin/ttt.mjs" "$BIN/ttt"
 echo "link $BIN/ttt -> $R/bin/ttt.mjs"
+
+# /trace slash command for Claude Code (user-level, every project).
+CMD="$HOME/.claude/commands"
+mkdir -p "$CMD"
+if [ -e "$CMD/trace.md" ] && [ ! -L "$CMD/trace.md" ]; then
+  echo "skip $CMD/trace.md exists and isn't ours — leaving it alone"
+else
+  ln -sf "$R/commands/trace.md" "$CMD/trace.md"
+  echo "link $CMD/trace.md -> $R/commands/trace.md   (/trace in Claude Code)"
+fi
 
 if [ -e "$CFG" ]; then
   node "$R/scripts/statusline.mjs" add "$CFG"

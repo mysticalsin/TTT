@@ -14,6 +14,8 @@ import { blockedCauses, applyRules } from '../lib/blocked.mjs';
 import { findPlanFile, parseChecklist, githubIssues, forecastPlan } from '../lib/plan.mjs';
 import { writeDashboard } from '../lib/dashboard.mjs';
 import { fmtUsd } from '../lib/pricing.mjs';
+import { buildTrace, renderTraceTty } from '../lib/trace.mjs';
+import { writeTraceHtml } from '../lib/trace-html.mjs';
 import { execFileSync } from 'node:child_process';
 import { fmtDur, fmtTok, parseDuration, parseTokens } from '../lib/util.mjs';
 import { c } from '../lib/style.mjs';
@@ -30,6 +32,7 @@ const HELP = `
   ${c.white('ttt blocked')} [--apply] [--all]   time Claude waited on you, and rules to stop it
   ${c.white('ttt plan')} [file] [--issues]      forecast your roadmap: TODO.md/ROADMAP.md or GitHub issues
   ${c.white('ttt dashboard')} [--all]           open the local visual dashboard
+  ${c.white('ttt trace')} [n|words] [--no-open]  waterfall of a task: model calls, tools, waits, subagents
   ${c.white('ttt index')} [--dir D] [--all]    (re)build the cache; the bar does this automatically
   ${c.white('ttt help')}
 
@@ -242,6 +245,26 @@ try {
       console.log('');
       console.log(`  ${c.bold('Σ')} ${c.bold(c.white(fmtDur(f.totalMs)))} ${c.dim('of Claude time')}  ${c.dim('·')}  ${c.cyan(fmtTok(f.totalTok))} ${c.dim(sum.tokenMode)}${f.finishAt ? `  ${c.dim('·')}  ${c.dim('at your pace of')} ${fmtDur(f.pace)}${c.dim('/day →')} ${c.green(new Date(f.finishAt).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }))}` : ''}`);
       console.log(c.faint('  🔮 = estimated from similar past tasks · ⏳ = from your typical task · forecasts are typically off by ×2–3 per item, less in total'));
+      console.log('');
+      break;
+    }
+    case 'trace': {
+      const dir = resolveProjectDir(args.dir);
+      const sum = load(dir, { quiet: true });
+      // Default: the last finished task, never the /trace call itself.
+      const pool = sum.tasks.filter((t) => t.msgs > 0 && !/^\/trace\b/.test(t.prompt));
+      const sel = args._.slice(1).join(' ').trim();
+      let v;
+      if (/^\d+$/.test(sel)) v = pool.filter((t) => t.status !== 'running').at(-Number(sel));
+      else if (sel) v = [...pool].reverse().find((t) => t.prompt.toLowerCase().includes(sel.toLowerCase()));
+      else v = pool.filter((t) => t.status !== 'running').at(-1) || pool.at(-1);
+      if (!v) throw new Error(sel ? `no task matching "${sel}"` : 'no finished task to trace yet');
+      const trace = buildTrace(dir, v);
+      if (args.json) { console.log(JSON.stringify(trace, null, 2)); break; }
+      const out = writeTraceHtml(trace, { file: args.out });
+      console.log(renderTraceTty(trace));
+      console.log(`  ${c.green('↗')} ${c.dim('interactive waterfall:')} ${out}`);
+      if (!args['no-open'] && process.platform === 'darwin') { try { execFileSync('open', [out]); } catch { /* headless */ } }
       console.log('');
       break;
     }

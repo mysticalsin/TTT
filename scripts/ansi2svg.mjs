@@ -63,9 +63,16 @@ export function ansiToSvg(text, { title = '', cols, font = 14 } = {}) {
       let chunk = '', chunkCol = col;
       const push = () => {
         // Leading spaces become an x offset: renderers collapse them despite xml:space.
-        const lead = chunk.length - chunk.trimStart().length;
-        const body = chunk.trim();
-        if (body) spans.push(`<text x="${(padX + (chunkCol + lead) * cw).toFixed(1)}" y="${y}" fill="${r.fg}"${r.bold ? ' font-weight="700"' : ''}>${esc(body)}</text>`);
+        // Renderers collapse runs of spaces even with xml:space, so every word group gets
+        // its own x position (split on 2+ spaces; single spaces render fine).
+        let off = 0;
+        for (const part of chunk.split(/( {2,})/)) {
+          if (part && part.trim() && !/^ +$/.test(part)) {
+            const lead = part.length - part.trimStart().length;
+            spans.push(`<text x="${(padX + (chunkCol + off + lead) * cw).toFixed(1)}" y="${y}" fill="${r.fg}"${r.bold ? ' font-weight="700"' : ''}>${esc(part.trim())}</text>`);
+          }
+          off += [...part].length;
+        }
         chunk = '';
       };
       for (const ch of r.text) {

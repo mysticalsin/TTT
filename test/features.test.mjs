@@ -198,3 +198,39 @@ test('bar: pre-flight forecast right after sending, loop alert while running', (
   fs.appendFileSync(file, e.map((x) => JSON.stringify(x)).join('\n') + '\n');
   assert.match(bar('task', input, T0 + 70_000), /🌀 same (error|call) ×5/);
 });
+
+test('trace: nested spans, handoff → subagent via meta.json, and $-safe HTML', async () => {
+  const { buildTrace, renderTraceTty } = await import('../lib/trace.mjs');
+  const { writeTraceHtml } = await import('../lib/trace-html.mjs');
+  const e = [human(0, "deploy it with $'quotes' and $PWD", 'TR')];
+  e.push(call(5, 'Agent', { description: 'Research the API', prompt: 'go' }));
+  const agentTool = lastToolId();
+  e.push({ ...result(8, 'TR', agentTool), toolUseResult: { agentId: 'ag1', isAsync: true, status: 'async_launched' } });
+  e.push(call(20, 'Bash', { command: 'cd app && export X=1 && npm test' }));
+  e.push(result(50, 'TR', lastToolId(), { error: true, text: 'FAIL' }));
+  e.push(call(60, 'Bash', { command: 'npm run deploy' }));
+  e.push(result(130, 'TR', lastToolId(), { source: 'user_temporary' }));
+  e.push(say(140));
+  const sub = [
+    { type: 'user', isSidechain: true, promptId: 'TR', agentId: 'ag1', timestamp: at(9), message: { role: 'user', content: 'go' } },
+    { type: 'assistant', isSidechain: true, agentId: 'ag1', timestamp: at(30), message: { id: 'sx1', model: 'claude-haiku-5-5', stop_reason: 'end_turn', usage: usage(80) } },
+  ];
+  const dir = project('-work-trace', { 't.jsonl': e, 't/subagents/agent-ag1.jsonl': sub });
+  fs.writeFileSync(path.join(dir, 't/subagents/agent-ag1.meta.json'), JSON.stringify({ toolUseId: agentTool, description: 'Research the API' }));
+  const sum = summarize(indexProject(dir).state, T0 + 3600_000);
+  const tr = buildTrace(dir, sum.tasks[0]);
+  const kinds = tr.spans.map((s) => s.kind);
+  assert.equal(tr.spans[0].kind, 'orchestrator');
+  assert.ok(kinds.includes('handoff') && kinds.includes('agent') && kinds.includes('failed') && kinds.includes('waiting'));
+  const agent = tr.spans.find((s) => s.kind === 'agent');
+  const handoff = tr.spans.find((s) => s.kind === 'handoff');
+  assert.equal(agent.parent, handoff.id); // nested under the call that spawned it
+  assert.equal(agent.name, 'Research the API');
+  assert.equal(tr.summary.errors, 1);
+  assert.equal(tr.summary.waiting, 70_000);
+  assert.equal(tr.spans.find((s) => s.kind === 'failed').detail, 'npm test'); // setup noise stripped
+  assert.match(renderTraceTty(tr), /Orchestrator[\s\S]*Research the API[\s\S]*Slowest/);
+  const html = fs.readFileSync(writeTraceHtml(tr, { file: path.join(tmp, 'trace.html') }), 'utf8');
+  assert.ok(html.includes("$'quotes' and $PWD"), 'replacement patterns must not corrupt the page');
+  assert.doesNotMatch(html, /__DATA__|<script[^>]+src=/);
+});

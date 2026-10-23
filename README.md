@@ -38,6 +38,32 @@ The line fits itself to the width it's given. When space is tight it drops the l
 
 ---
 
+## `/trace` — a waterfall of any task
+
+Type **`/trace`** in Claude Code (or run `ttt trace` in a terminal) to see your last task as a waterfall:
+- **What's in it:** every model call, tool call, wait on you, failure and subagent handoff, nested under the orchestrator, on one time axis.
+- **In Claude Code:** you get a compact waterfall in the terminal, the interactive version opens in your browser, and Claude replies with a three-line read: the biggest time sink, what failed or waited on you, and one way to make it faster.
+- **Picking a task:** `/trace 3` traces the third-last task; `/trace stripe` traces the last task whose prompt mentions "stripe".
+
+<p align="center"><img src="docs/trace.svg" alt="/trace in the terminal: summary of duration, cost, tokens, LLM and tool calls, errors and agents; a lane per subagent coloured by what it was doing; the slowest steps" width="80%"></p>
+
+The browser view shows:
+- **Summary chips:** duration, cost, tokens, LLM calls, tool calls, errors, waited on you, subagents.
+- **A collapsible span tree**, with each subagent nested under the handoff that spawned it.
+- **Tools to find things:** `⌘F` search (with a "No matching steps" state), zoom from 0.5× to 4× (also `+` / `-`), a **Slowest** list that jumps to the span, and a click-to-inspect panel with the input, what Claude said, errors, tokens and cost.
+- **Light and dark** themes.
+
+It's one local HTML file with no network requests, so your prompts never leave your machine.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/trace-dark.png" alt="Trace waterfall in the browser, dark theme"></td>
+<td width="50%"><img src="docs/trace-light.png" alt="Trace waterfall in the browser, light theme"></td>
+</tr>
+</table>
+
+---
+
 ## Commands
 
 ```bash
@@ -46,6 +72,7 @@ ttt eta "add Apple Pay"  # forecast a task before you send it
 ttt why [n]              # where the time went in the last (or nth-last) finished task
 ttt blocked [--apply]    # time Claude waited on you, and the allow-rules that stop it
 ttt plan [file|--issues] # forecast your roadmap: TODO.md / ROADMAP.md, or GitHub issues
+ttt trace [n|words]      # waterfall of a task (also /trace inside Claude Code)
 ttt dashboard [--all]    # local visual dashboard in your browser
 ttt all                  # every project ranked by real time
 ttt convert 250k | 45m   # tokens ⇄ time at your measured pace
@@ -121,6 +148,7 @@ alias ttt=~/.claude/bin/ttt   # add to ~/.zshrc
 
 The installer does three things:
 - Links `~/.claude/bin/ttt` to the repo.
+- Adds the `/trace` slash command to `~/.claude/commands/`. It never overwrites a `trace.md` that isn't TTT's.
 - Adds one line to your ccstatusline config. It edits the text in place, so your formatting survives (the diff is exactly 4 lines). It writes through a tonys-tcc symlink and backs up to `~/.cache/ttt/backups/`.
 - Warms the cache in the background.
 
@@ -162,6 +190,8 @@ No ccstatusline? Use TTT directly:
 | `lib/pricing.mjs` | API-equivalent cost |
 | `lib/notify.mjs` | Notifications and voice |
 | `lib/dashboard.mjs` | The local HTML dashboard |
+| `lib/trace.mjs` · `lib/trace-html.mjs` | `/trace`: span builder, terminal waterfall, browser waterfall |
+| `commands/trace.md` | The `/trace` slash command (linked into `~/.claude/commands/`) |
 | `lib/bar.mjs` · `lib/report.mjs` | Status line and terminal reports |
 | `scripts/visuals.mjs` | Rebuilds every image in `docs/` from synthetic demo projects (`npm run visuals`) |
 | `test/` | `npm test` (node:test) |
