@@ -1,0 +1,16 @@
+{
+  "name": "ttt",
+  "version": "1.0.0",
+  "description": "Token to Time — the real time your Claude Code tokens buy, per task and per project, live in your status bar.",
+  "type": "module",
+  "bin": { "ttt": "bin/ttt.mjs" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "report": "node bin/ttt.mjs report",
+    "install-bar": "./install.sh",
+    "visuals": "node scripts/visuals.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT",
+  "private": true
+}

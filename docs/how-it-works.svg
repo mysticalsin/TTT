@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1e24"/><stop offset="1" stop-color="#14161a"/></linearGradient>
+    <linearGradient id="rb" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00e5ff"/><stop offset=".33" stop-color="#7c5cff"/><stop offset=".66" stop-color="#ff4fa3"/><stop offset="1" stop-color="#ffc84a"/>
+    </linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+  </defs>
+  <rect width="960" height="330" rx="14" fill="url(#bg)"/>
+  <rect x=".5" y=".5" width="959" height="329" rx="14" fill="none" stroke="#2c3038"/>
+  <text x="32" y="40" fill="#e5e7eb" font-size="17" font-weight="700">How TTT turns tokens into time</text>
+  <rect x="32" y="52" width="250" height="3" rx="1.5" fill="url(#rb)"/>
+
+  <!-- 1 transcripts -->
+  <g transform="translate(32,82)">
+    <rect width="200" height="196" rx="10" fill="#1f232b" stroke="#343a46"/>
+    <text x="16" y="28" fill="#8abeb7" font-size="13" font-weight="700">1 · Transcripts</text>
+    <text x="16" y="50" fill="#9ca3af" font-size="11.5">written by Claude Code</text>
+    <g font-family="SF Mono,Menlo,monospace" font-size="11" fill="#d1d5db">
+      <text x="16" y="82">~/.claude/projects/</text>
+      <text x="26" y="100">&lt;project&gt;/</text>
+      <text x="36" y="118" fill="#f0c674">session.jsonl</text>
+      <text x="36" y="136">session/subagents/</text>
+      <text x="46" y="154" fill="#b294bb">agent-*.jsonl</text>
+    </g>
+    <text x="16" y="182" fill="#6b7280" font-size="11">no hooks · no proxy · read-only</text>
+  </g>
+
+  <!-- 2 indexer -->
+  <g transform="translate(272,82)">
+    <rect width="200" height="196" rx="10" fill="#1f232b" stroke="#343a46"/>
+    <text x="16" y="28" fill="#81a2be" font-size="13" font-weight="700">2 · Incremental index</text>
+    <text x="16" y="50" fill="#9ca3af" font-size="11.5">only new bytes, every refresh</text>
+    <g font-size="11.5" fill="#d1d5db">
+      <text x="16" y="82">• one task per prompt you send</text>
+      <text x="16" y="102">• subagents joined by promptId</text>
+      <text x="16" y="122">• usage counted once per msg</text>
+      <text x="16" y="142">• partial lines left for later</text>
+    </g>
+    <text x="16" y="182" fill="#6b7280" font-size="11">~/.cache/ttt · ~80 ms warm</text>
+  </g>
+
+  <!-- 3 model -->
+  <g transform="translate(512,82)">
+    <rect width="200" height="196" rx="10" fill="#1f232b" stroke="#343a46"/>
+    <text x="16" y="28" fill="#ff8fc7" font-size="13" font-weight="700">3 · Tokens → time</text>
+    <text x="16" y="50" fill="#9ca3af" font-size="11.5">measured, never assumed</text>
+    <g font-size="11.5" fill="#d1d5db">
+      <text x="16" y="82">• active: idle gaps &gt; 5m cut</text>
+      <text x="16" y="102">• real: union across sessions</text>
+      <text x="16" y="122">• agent: Σ every stream</text>
+      <text x="16" y="142">• rate: tokens per real minute</text>
+      <text x="16" y="162">• ETA: survival over history</text>
+    </g>
+  </g>
+
+  <!-- 4 outputs -->
+  <g transform="translate(752,82)">
+    <rect width="176" height="92" rx="10" fill="#1f232b" stroke="#343a46"/>
+    <text x="16" y="28" fill="#b5bd68" font-size="13" font-weight="700">4a · Status bar</text>
+    <text x="16" y="52" fill="#d1d5db" font-size="11.5">task · ETA · project</text>
+    <text x="16" y="72" fill="#6b7280" font-size="11">ccstatusline widget</text>
+  </g>
+  <g transform="translate(752,186)">
+    <rect width="176" height="92" rx="10" fill="#1f232b" stroke="#343a46"/>
+    <text x="16" y="28" fill="#f0c674" font-size="13" font-weight="700">4b · CLI</text>
+    <text x="16" y="52" fill="#d1d5db" font-size="11.5">report · all · convert</text>
+    <text x="16" y="72" fill="#6b7280" font-size="11">--json for scripts</text>
+  </g>
+
+  <g stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+    <path d="M234,180 L268,180"/>
+    <path d="M474,180 L508,180"/>
+    <path d="M714,160 L748,130"/>
+    <path d="M714,200 L748,230"/>
+  </g>
+  <text x="32" y="308" fill="#6b7280" font-size="11.5">Big cold start? The bar answers instantly with "indexing history…" and a detached job catches up in the background.</text>
+</svg>
