@@ -44,8 +44,9 @@ fi
 if [ "$1" != "--ttt-only" ]; then
   for f in $DOTFILES; do link "$f"; done
   command -v jq >/dev/null 2>&1 || echo "WARN: jq not installed (cc-health.sh needs it) -> brew install jq"
+  # No --version: ccstatusline reads status JSON from stdin and would wait on it.
   command -v ccstatusline >/dev/null 2>&1 \
-    && echo "ccstatusline: $(ccstatusline --version 2>/dev/null || echo installed)" \
+    && echo "ccstatusline: $(command -v ccstatusline)" \
     || echo "WARN: ccstatusline not installed -> npm install -g ccstatusline@2.2.19"
 fi
 
