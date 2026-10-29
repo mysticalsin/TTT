@@ -17,3 +17,5 @@ jobs:
         run: |
           echo '{}' | node bin/ttt.mjs bar
           node bin/ttt.mjs help
+      - name: Shell syntax
+        run: bash -n install.sh .claude/bin/cc-health.sh .claude/bin/cc-tokens .claude/bin/sam

@@ -1,0 +1,9 @@
+{
+  "_comment": "Add this statusLine block to your ~/.claude/settings.json to use ccstatusline. The rest of your settings.json (hooks, plugins, etc.) is personal and not included in this repo.",
+  "statusLine": {
+    "type": "command",
+    "command": "ccstatusline",
+    "padding": 0,
+    "refreshInterval": 10
+  }
+}

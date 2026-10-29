@@ -1,0 +1,54 @@
+{
+  "version": 3,
+  "lines": [
+    [
+      { "id": "e-model", "type": "custom-text", "customText": "🤖 ", "merge": "no-padding", "color": "white" },
+      { "id": "v-model", "type": "model", "color": "cyan", "bold": true, "rawValue": true },
+      { "id": "v-effort", "type": "custom-command", "commandPath": "$HOME/.claude/bin/cc-health.sh effort", "preserveColors": true, "timeout": 1000 },
+      { "id": "e-dir", "type": "custom-text", "customText": "📁 ", "merge": "no-padding", "color": "white" },
+      { "id": "v-dir", "type": "current-working-dir", "color": "brightBlue", "rawValue": true, "metadata": { "abbreviateHome": "true" } },
+      { "id": "e-git", "type": "custom-text", "customText": "🌿 ", "merge": "no-padding", "color": "white" },
+      { "id": "v-git", "type": "git-branch", "color": "magenta", "rawValue": true, "merge": "no-padding" }
+    ],
+    [
+      { "id": "v-ctx", "type": "custom-command", "commandPath": "$HOME/.claude/bin/cc-health.sh ctx", "preserveColors": true, "timeout": 1000, "merge": "no-padding" },
+      { "id": "e-cost", "type": "custom-text", "customText": "  💲 ", "merge": "no-padding", "color": "white" },
+      { "id": "v-cost", "type": "session-cost", "color": "green", "rawValue": true, "merge": "no-padding" },
+      { "id": "e-tok", "type": "custom-text", "customText": "  📊 ", "merge": "no-padding", "color": "white" },
+      { "id": "v-tok", "type": "tokens-total", "color": "cyan", "rawValue": true, "merge": "no-padding" },
+      { "id": "e-spd", "type": "custom-text", "customText": " tok  ⚡ ", "merge": "no-padding", "color": "white" },
+      { "id": "v-spd", "type": "total-speed", "color": "brightCyan", "rawValue": true, "merge": "no-padding" }
+    ],
+    [
+      { "id": "v-limits", "type": "custom-command", "commandPath": "$HOME/.claude/bin/cc-health.sh limits", "preserveColors": true, "timeout": 1000 }
+    ],
+    [
+      { "id": "v-ttt-task", "type": "custom-command", "commandPath": "$HOME/.claude/bin/ttt bar task", "preserveColors": true, "timeout": 1500 },
+      { "id": "v-ttt-project", "type": "custom-command", "commandPath": "$HOME/.claude/bin/ttt bar project", "preserveColors": true, "timeout": 1500 }
+    ],
+    [
+      { "id": "v-rainbow", "type": "custom-command", "commandPath": "$HOME/.claude/bin/cc-health.sh rainbow", "preserveColors": true, "timeout": 1000 }
+    ]
+  ],
+  "flexMode": "full-minus-40",
+  "compactThreshold": 60,
+  "colorLevel": 2,
+  "defaultSeparator": "  ",
+  "inheritSeparatorColors": false,
+  "globalBold": false,
+  "gitCacheTtlSeconds": 5,
+  "minimalistMode": false,
+  "powerline": {
+    "enabled": false,
+    "separators": [""],
+    "separatorInvertBackground": [false],
+    "startCaps": [],
+    "endCaps": [],
+    "autoAlign": false,
+    "continueThemeAcrossLines": false
+  },
+  "installation": {
+    "method": "pinned",
+    "installedVersion": "2.2.19"
+  }
+}

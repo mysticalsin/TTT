@@ -1,0 +1,79 @@
+#!/bin/bash
+# sam — Sam's voice-OUT. Speaks Claude's last reply aloud via ElevenLabs, on demand.
+#
+# Voice-IN is Superwhisper (your keybind dictates speech into the Claude Code
+# prompt). This is the other half: when you want to HEAR the reply, trigger sam.
+#
+#   sam              speak Claude's most recent reply (from the session transcript)
+#   sam "some text"  speak that text instead
+#
+# Trigger it however you like — a shell alias, a global keybind, or `!sam` typed
+# in the Claude Code prompt. No app, no daemon, no second window.
+#
+# Key resolution: $ELEVENLABS_API_KEY, else macOS Keychain
+#   (security add-generic-password -s samantha-loop -a elevenlabs -w).
+
+set -euo pipefail
+
+KEY="${ELEVENLABS_API_KEY:-}"
+if [ -z "$KEY" ]; then
+  KEY="$(security find-generic-password -s samantha-loop -a elevenlabs -w 2>/dev/null || true)"
+fi
+if [ -z "$KEY" ]; then
+  echo "sam: no ElevenLabs key. Set ELEVENLABS_API_KEY, or store it once:" >&2
+  echo "     security add-generic-password -s samantha-loop -a elevenlabs -w" >&2
+  exit 1
+fi
+
+VOICE="${SAM_VOICE_ID:-21m00Tcm4TlvDq8ikWAM}"      # Rachel (warm female)
+MODEL="${SAM_TTS_MODEL:-eleven_multilingual_v2}"
+
+# What to say: args if given, else the last assistant message in the newest transcript.
+if [ "$#" -gt 0 ]; then
+  TEXT="$*"
+else
+  TX="$(ls -t "$HOME"/.claude/projects/*/*.jsonl 2>/dev/null | head -1 || true)"
+  if [ -z "$TX" ]; then echo "sam: no Claude transcript found" >&2; exit 1; fi
+  TEXT="$(python3 - "$TX" <<'PY'
+import sys, json
+last = ""
+for line in open(sys.argv[1], encoding="utf-8", errors="ignore"):
+    try:
+        o = json.loads(line)
+    except Exception:
+        continue
+    msg = o.get("message") or {}
+    if o.get("type") == "assistant" or msg.get("role") == "assistant":
+        c = msg.get("content")
+        if isinstance(c, str):
+            if c.strip():
+                last = c
+        elif isinstance(c, list):
+            t = " ".join(b.get("text", "") for b in c
+                         if isinstance(b, dict) and b.get("type") == "text")
+            if t.strip():
+                last = t
+# strip markdown noise for speech; cap length so we don't synth an essay
+import re
+last = re.sub(r'`{1,3}|[*#_>]', '', last).strip()
+print(last[:1200])
+PY
+)"
+fi
+
+if [ -z "${TEXT// }" ]; then echo "sam: nothing to say"; exit 0; fi
+
+OUT="${TMPDIR:-/tmp}/sam.mp3"
+BODY="$(python3 -c 'import json,sys; print(json.dumps({"text":sys.argv[1],"model_id":sys.argv[2]}))' "$TEXT" "$MODEL")"
+code="$(curl -s -o "$OUT" -w '%{http_code}' -X POST \
+  "https://api.elevenlabs.io/v1/text-to-speech/$VOICE" \
+  -H "xi-api-key: $KEY" -H "Content-Type: application/json" -d "$BODY")"
+if [ "$code" != "200" ]; then
+  echo "sam: ElevenLabs HTTP $code" >&2; head -c 200 "$OUT" >&2; echo >&2; exit 1
+fi
+
+if command -v afplay >/dev/null 2>&1; then afplay "$OUT"
+elif command -v ffplay >/dev/null 2>&1; then ffplay -nodisp -autoexit -loglevel quiet "$OUT"
+elif command -v mpv >/dev/null 2>&1; then mpv --no-video --really-quiet "$OUT"
+else echo "sam: no audio player (afplay/ffplay/mpv)" >&2; exit 1
+fi

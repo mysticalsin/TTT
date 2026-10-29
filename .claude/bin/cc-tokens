@@ -1,0 +1,12 @@
+#!/bin/bash
+# cc-tokens — on-demand token + cost report across ALL Claude Code projects.
+# Backed by ccusage (reads ~/.claude/projects/*.jsonl). No install needed.
+#
+# Usage:
+#   cc-tokens              # per-session/project breakdown (default)
+#   cc-tokens daily        # tokens + cost per day
+#   cc-tokens monthly      # tokens + cost per month
+#   cc-tokens blocks       # 5-hour billing blocks
+#   cc-tokens blocks --active   # current block w/ burn rate + projected total
+#   cc-tokens <any ccusage args...>
+exec npx -y ccusage@latest "${@:-session}"

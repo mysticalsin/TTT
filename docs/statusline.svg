@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="350" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">
+  <style>
+    .b { font-weight: 700; }
+    text { dominant-baseline: middle; }
+  </style>
+  <!-- window -->
+  <rect x="0" y="0" width="920" height="350" rx="12" fill="#0d1117"/>
+  <rect x="0" y="0" width="920" height="36" rx="12" fill="#161b22"/>
+  <rect x="0" y="24" width="920" height="12" fill="#161b22"/>
+  <circle cx="22" cy="18" r="6" fill="#ff5f56"/>
+  <circle cx="42" cy="18" r="6" fill="#ffbd2e"/>
+  <circle cx="62" cy="18" r="6" fill="#27c93f"/>
+  <text x="460" y="18" fill="#8b949e" text-anchor="middle">Tony's Claude Code taskbar</text>
+
+  <!-- healthy -->
+  <text x="22" y="62" fill="#3fb950" class="b">● healthy</text>
+  <text x="22" y="90" fill="#c9d1d9">🤖 <tspan fill="#39c5cf" class="b">Opus 4.8</tspan>  💭 <tspan fill="#e3b341" class="b">high</tspan>  📁 <tspan fill="#79c0ff">~/proj</tspan>  🌿 <tspan fill="#d2a8ff">main</tspan></text>
+  <text x="22" y="118" fill="#c9d1d9">🧠 <tspan fill="#87d7af">40% ctx</tspan>  💲 <tspan fill="#87c038">$3.42</tspan>  📊 <tspan fill="#39c5cf">19.6M tok</tspan>  ⚡ <tspan fill="#56d4dd">256 t/s</tspan></text>
+  <text x="22" y="146" fill="#c9d1d9">🔋5h <tspan fill="#87d7af">▓░░░░ 37%</tspan> <tspan fill="#8b949e">↻18:07 ok</tspan>   📅7d <tspan fill="#87d7af">▓▓░░░ 52%</tspan> <tspan fill="#8b949e">↻Fri 14:03</tspan></text>
+
+  <line x1="22" y1="170" x2="898" y2="170" stroke="#21262d"/>
+
+  <!-- near limits -->
+  <text x="22" y="194" fill="#f85149" class="b">● near limits — colors + warnings fire automatically</text>
+  <text x="22" y="222" fill="#c9d1d9">🤖 <tspan fill="#39c5cf" class="b">Opus 4.8</tspan>  💭 <tspan fill="#8b949e" class="b">low</tspan>  📁 <tspan fill="#79c0ff">~/proj</tspan>  🌿 <tspan fill="#d2a8ff">main</tspan></text>
+  <text x="22" y="250" fill="#c9d1d9">🧠 <tspan fill="#ffab5f">90% ctx</tspan> <tspan fill="#f85149">⚠compact soon</tspan>  💲 <tspan fill="#87c038">$8.40</tspan>  📊 <tspan fill="#39c5cf">41M tok</tspan>  ⚡ <tspan fill="#56d4dd">612 t/s</tspan></text>
+  <text x="22" y="278" fill="#c9d1d9">🔋5h <tspan fill="#ffab5f">▓▓▓▓░ 82%</tspan> <tspan fill="#8b949e">↻18:07</tspan> <tspan fill="#f85149">⚠cap~25m</tspan>   📅7d <tspan fill="#f85149">▓▓▓▓▓▓░ 88%</tspan> <tspan fill="#8b949e">↻Fri</tspan> <tspan fill="#f85149">⚠cap~6h</tspan></text>
+
+  <!-- legend -->
+  <text x="22" y="320" fill="#8b949e">legend  <tspan fill="#87d7af">●</tspan> &lt;70%  <tspan fill="#ffab5f">●</tspan> 70–89%  <tspan fill="#f85149">●</tspan> ≥90%   ·   ↻ = next reset   ·   ⚠cap~Xm = projected to hit limit before reset</text>
+</svg>

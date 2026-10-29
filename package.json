@@ -1,6 +1,6 @@
 {
   "name": "ttt",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Token to Time — real time, forecasts, limits runway and loop alerts for Claude Code, live in your status bar.",
   "type": "module",
   "bin": { "ttt": "bin/ttt.mjs" },

@@ -16,7 +16,7 @@ TTT puts it in your Claude Code status bar and keeps it to one line: the running
 
 **New in 2.1: [`/trace`](#trace--a-waterfall-of-any-task)**, a waterfall of any task (every model call, tool, wait and subagent) right inside Claude Code.
 
-TTT adds **one line** to a [ccstatusline](https://github.com/sirmalloc/ccstatusline) bar like [tonys-tcc](https://github.com/mysticalsin/tonys-tcc), just above the rainbow rule. It also works on its own. It has zero dependencies (only Node) and nothing to configure. It reads the transcripts Claude Code already writes: no hooks, no proxy, nothing sent anywhere.
+TTT ships with **the whole bar**: a color-coded [ccstatusline](https://github.com/sirmalloc/ccstatusline) layout (model, effort, context, cost, burn rate, 5h/7d limits, a flowing rainbow rule) with the TTT line just above the rainbow, plus **[Sam](#the-bar--sam)**, a voice layer for Claude Code. Already have a bar you like? `./install.sh --ttt-only` adds just the TTT line to it. TTT also works on its own. It has zero dependencies (only Node) and nothing to configure. It reads the transcripts Claude Code already writes: no hooks, no proxy, nothing sent anywhere.
 
 ## What the line can say
 
@@ -36,7 +36,7 @@ TTT adds **one line** to a [ccstatusline](https://github.com/sirmalloc/ccstatusl
 
 The line fits itself to the width it's given. When space is tight it drops the least important parts first (tok/min, the exchange rate, agent time…). The clock, alerts and ETA always stay.
 
-**Walk-away mode.** When a task you left running for 3+ minutes finishes, or starts looping, you get a macOS notification. Set `TTT_VOICE=1` and [Sam](https://github.com/mysticalsin/tonys-tcc) says it out loud: *"Done. 21 minutes, 118 thousand tokens, 3 minutes faster than usual."*
+**Walk-away mode.** When a task you left running for 3+ minutes finishes, or starts looping, you get a macOS notification. Set `TTT_VOICE=1` and [Sam](#sam-talk-to-claude-code) says it out loud: *"Done. 21 minutes, 118 thousand tokens, 3 minutes faster than usual."*
 
 ---
 
@@ -63,6 +63,45 @@ It's one local HTML file with no network requests, so your prompts never leave y
 <td width="50%"><img src="docs/trace-light.png" alt="Trace waterfall in the browser, light theme"></td>
 </tr>
 </table>
+
+---
+
+## The bar + Sam
+
+<p align="center"><img src="docs/bar.gif" alt="The full bar: model, effort, dir and git; context, cost, tokens and burn rate; 5h and 7d usage limits; then a flowing rainbow rule above the input" width="100%"></p>
+
+The bar is four ccstatusline lines (plus the TTT line), colored by a small shell script, `cc-health.sh`, that turns the status JSON into traffic-light signals:
+
+- **Line 1, context:** `🤖 model`, `💭 effort` colored by intensity (low gray, max red), `📁 dir`, `🌿 git branch`.
+- **Line 2, this session:** `🧠 context %` (green, amber, red) with `⚠compact soon` before auto-compact; `💲 cost`, `📊 tokens`, `⚡ burn rate`.
+- **Line 3, your limits:** `🔋 5h` and `📅 7d` windows as % used, bar and reset clock (`↻`), plus `ok` or `⚠cap~25m` when your pace would hit the cap before it resets.
+- **TTT line:** everything described above.
+- **Rainbow:** a full-width truecolor rule whose hue shifts every refresh (lower `refreshInterval` to ~3 for visible motion).
+
+Colors: 🟢 `<70%` · 🟡 `70–89%` · 🔴 `≥90%`.
+
+```
+Claude Code ──JSON──▶ ccstatusline ──JSON on stdin──▶ cc-health.sh / ttt bar ──ANSI──▶ your terminal
+```
+
+`cc-health.sh` has four modes: `effort`, `ctx`, `limits` and `rainbow`. Tunables (color cutoffs `70`/`90`, compact warning at `≥85%`, bar width `5`, block lengths, the 7-day warn horizon) live at the top of the script.
+
+`cc-tokens` gives an on-demand token and cost report across all projects (wraps [ccusage](https://github.com/ryoppippi/ccusage)): `cc-tokens`, `cc-tokens daily | monthly`, `cc-tokens blocks --active`.
+
+### Sam: talk to Claude Code
+
+No app, no second window.
+
+- **Voice in:** [Superwhisper](https://superwhisper.com). Hit your keybind, speak, and it dictates into the Claude Code prompt.
+- **Voice out (`sam`):** reads Claude's last reply aloud via ElevenLabs, with your key from the macOS Keychain. TTT's walk-away notifications use it too when `TTT_VOICE=1`.
+
+```bash
+security add-generic-password -s samantha-loop -a elevenlabs -w   # once: store your ElevenLabs key
+sam            # speak Claude's most recent reply
+sam "hello"    # speak arbitrary text
+```
+
+The key resolves from `$ELEVENLABS_API_KEY`, then the Keychain. The default voice is Rachel (`21m00Tcm4TlvDq8ikWAM`); override it with `SAM_VOICE_ID`. [`samantha/`](samantha/) holds the fuller, optional voice CLI (pluggable ElevenLabs / MisoTTS, goal tracking, auto-compact).
 
 ---
 
@@ -143,18 +182,28 @@ Claude Code writes every turn to `~/.claude/projects/<project>/<session>.jsonl`,
 ## Install
 
 ```bash
+npm install -g ccstatusline@2.2.19        # the bar engine (needs jq too: brew install jq)
 git clone https://github.com/mysticalsin/TTT.git ~/Documents/Projects/TTT
 cd ~/Documents/Projects/TTT && ./install.sh
 alias ttt=~/.claude/bin/ttt   # add to ~/.zshrc
 ```
 
-The installer does three things:
+Then point Claude Code at ccstatusline in `~/.claude/settings.json` (see [`examples/statusLine.json`](examples/statusLine.json)):
+
+```json
+{ "statusLine": { "type": "command", "command": "ccstatusline", "padding": 0, "refreshInterval": 10 } }
+```
+
+The installer:
+- Links the bar into place: `~/.claude/bin/cc-health.sh`, `cc-tokens`, `sam` and `~/.config/ccstatusline/settings.json`. Any real file it would replace is kept as `*.pre-dotfiles.bak`.
 - Links `~/.claude/bin/ttt` to the repo.
 - Adds the `/trace` slash command to `~/.claude/commands/`. It never overwrites a `trace.md` that isn't TTT's.
-- Adds one line to your ccstatusline config. It edits the text in place, so your formatting survives (the diff is exactly 4 lines). It writes through a tonys-tcc symlink and backs up to `~/.cache/ttt/backups/`.
+- Makes sure your ccstatusline config has the TTT line. The bundled layout already has it; with `--ttt-only` it adds the line to your own config, editing the text in place so your formatting survives (the diff is exactly 4 lines), and backs up to `~/.cache/ttt/backups/`.
 - Warms the cache in the background.
 
-`./install.sh --uninstall` reverses it byte-for-byte.
+`./install.sh --ttt-only` skips the bar and keeps your own ccstatusline layout. `./install.sh --uninstall` removes every link it made and restores the backups.
+
+> Personal Claude Code settings (hooks, plugins) are **not** included, only the status-line layer.
 
 No ccstatusline? Use TTT directly:
 
@@ -197,5 +246,19 @@ No ccstatusline? Use TTT directly:
 | `lib/bar.mjs` · `lib/report.mjs` | Status line and terminal reports |
 | `scripts/visuals.mjs` | Rebuilds every image in `docs/` from synthetic demo projects (`npm run visuals`) |
 | `test/` | `npm test` (node:test) |
+| `.claude/bin/cc-health.sh` | Bar colorizer: reads status JSON on stdin, prints `effort` / `ctx` / `limits` / `rainbow` segments |
+| `.claude/bin/cc-tokens` | Token and cost report across all projects (wraps ccusage) |
+| `.claude/bin/sam` | Sam's voice-out: speaks Claude's last reply via ElevenLabs |
+| `.config/ccstatusline/settings.json` | The ccstatusline layout, TTT line included (`$HOME` paths, portable) |
+| `examples/statusLine.json` | The `statusLine` snippet for your own settings |
+| `samantha/` | The fuller, optional voice CLI (Python) |
+
+## Credits
+
+- [ccstatusline](https://github.com/sirmalloc/ccstatusline), the status line engine
+- [cc-statusline](https://github.com/chongdashu/cc-statusline), the original inspiration for the bar
+- [ccusage](https://github.com/ryoppippi/ccusage), usage reporting behind `cc-tokens`
+
+This repo used to be two: TTT and [tonys-tcc](https://github.com/mysticalsin/tonys-tcc) (the bar + Sam). Both histories live on here.
 
 > All screenshots come from synthetic demo projects (`npm run visuals`). None of them come from real transcripts.

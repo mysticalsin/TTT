@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0 · one repo: TTT + the bar + Sam
+- **tonys-tcc is fused in.** The ccstatusline layout, `cc-health.sh`, `cc-tokens`, `sam` and `samantha/` now live here, with both git histories kept.
+- The bundled bar layout ships with the TTT line already above the rainbow rule.
+- **One installer:** `./install.sh` links the bar, Sam, `ttt` and `/trace`; `--ttt-only` keeps your own bar and only adds the TTT line; `--uninstall` removes every link and restores backups.
+- CI also syntax-checks the shell scripts.
+
 ## 2.1.0 — `/trace`
 - **`/trace` slash command** (and `ttt trace [n|words]`): a waterfall of any task.
   - **What it shows:** every model call, tool call, wait on you, failure and subagent handoff, nested on one time axis. Each subagent sits under the `Agent` call that spawned it.
