@@ -27,6 +27,21 @@ _rb() { # $1 filled  $2 total  $3 off_deg  $4 fillchar  $5 emptychar
     printf "%s\033[0m", s }'
 }
 
+# ---- rainbow TEXT: each character of $1 gets a flowing hue from $2 degrees.
+# Reuses the same hsv() as _rb; truecolor, passed through preserveColors:true. ----
+_rbtext() { # $1 string  $2 off_deg
+  awk -v s="$1" -v off="$2" '
+  function hsv(h,  i,fr,r,g,b){
+    h=((h%360)+360)%360; h=h/60.0; i=int(h); fr=h-i;
+    if(i==0){r=1;g=fr;b=0} else if(i==1){r=1-fr;g=1;b=0}
+    else if(i==2){r=0;g=1;b=fr} else if(i==3){r=0;g=1-fr;b=1}
+    else if(i==4){r=fr;g=0;b=1} else {r=1;g=0;b=1-fr}
+    return sprintf("38;2;%d;%d;%d", r*255, g*255, b*255) }
+  BEGIN{ n=length(s); out=""; d=(n>1?n:1);
+    for(j=1;j<=n;j++){ out=out sprintf("\033[%sm%s", hsv(off + (j-1)*(360.0/d)), substr(s,j,1)) }
+    printf "%s\033[0m", out }'
+}
+
 # ---- rainbow mode: a full-width flowing rainbow rule (the color-rich headline
 # row). Placed before the jq check so it renders even without jq. ----
 if [ "$mode" = "rainbow" ]; then
@@ -93,7 +108,15 @@ now=$(date +%s)
 if [ "$mode" = "effort" ]; then
   lvl=$(jq -r '.effort.level // empty' <<<"$json" 2>/dev/null)
   { [ -z "$lvl" ] || [ "$lvl" = "null" ]; } && exit 0
-  printf '💭 \033[1m%s%s%s' "$(ecol "$lvl")" "$lvl" "$RST"
+  case "$lvl" in
+    ultracode|xhigh|max)   # the ultracode / top-effort tier -> flowing rainbow bar
+      off=${RB_OFF:-$(( ($(date +%s) * 37) % 360 ))}
+      printf '💭 \033[1m%s' "$(_rbtext "$lvl" "$off")"
+      ;;
+    *)
+      printf '💭 \033[1m%s%s%s' "$(ecol "$lvl")" "$lvl" "$RST"
+      ;;
+  esac
   exit 0
 fi
 
